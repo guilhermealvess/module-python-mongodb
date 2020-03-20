@@ -1,43 +1,49 @@
 import pymongo
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 
-client = pymongo.MongoClient(
-    "mongodb+srv://<USER>:<PASSWORD>@<SERVER>/<DATABASE>")
-db = client['gump-ia']
+class Database:
 
+    def __init__(self, database):
+        strConn = os.getenv('MONGO_URI')
+        client = pymongo.MongoClient(strConn)
+        self.__db = client[database]
 
-def insert(collection, content):
-    try:
-        doc = db[collection].insert_one(content)
-        return doc.inserted_id
-    except:
-        return None
+    def insert(self, collection, document):
+        try:
+            doc = self.__db[collection].insert_one(document)
+            return doc.inserted_id
+        except Exception as err:
+            return err
 
+    def update(self, collection, match, document):
+        try:
+            self.__db[collection].update_one(match, {'$set': document})
+        except Exception as err:
+            return err
 
-def update(collection, match, content):
-    db[collection].update_one(match, {'$set': content})
+    def find_one(self, collection, match=None, fields=None):
+        try:
+            return self.__db[collection].find_one(match, fields)
+        except Exception as err:
+            return err
 
+    def find(self, collection, match=None, fields=None):
+        try:
+            return list(self.__db[collection].find(match, fields))
+        except Exception as err:
+            return err
 
-def find_one(collection, match):
-    try:
-        return db[collection].find_one(match)
-    except:
-        return None
+    def delete(self, collection, match):
+        try:
+            self.__db[collection].delete_one(match)
+        except Exception as err:
+            return err
 
-
-def find(collection, match):
-    try:
-        return list(db[collection].find(match))
-    except:
-        return None
-
-
-def find_all(collection):
-    try:
-        return list(db[collection].find())
-    except:
-        return None
-
-
-def delete(collection, match):
-    db[collection].delete_one(match)
+    def list_collections(self):
+        try:
+            return self.__db.collection_names()
+        except Exception as err:
+            return err
